@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Little Mozart</string>
+    <string name="actions">작업</string>
+    <string name="cancel">취소</string>
+    <string name="date">날짜</string>
+    <string name="delete">삭제</string>
+    <string name="msg_ask_file">꼬마 모차르트에게 보내겠습니까?</string>
+    <string name="msg_complete_record">녹음 완료.</string>
+    <string name="msg_delete_file">삭제 하시겠습니까?</string>
+    <string name="msg_failed_delete">삭제 실패.</string>
+    <string name="msg_failed_rename">이름 변경 실패.</string>
+    <string name="msg_saved">저장 됨.</string>
+    <string name="msg_success_delete">삭제 성공.</string>
+    <string name="msg_success_rename">이름 변경 성공.</string>
+    <string name="play">재생</string>
+    <string name="record">녹음 시작</string>
+    <string name="rename">이름 변경</string>
+    <string name="file_size">파일 크기</string>
+    <string name="stop">정지</string>
+    <string name="title_activity_recording">녹음</string>
+    <string name="yes">예</string>
+</resources>

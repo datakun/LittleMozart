@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Little Mozart</string>
+
+    <string name="title_activity_recording">Recording</string>
+
+    <string name="record">Record</string>
+    <string name="stop">Stop</string>
+    <string name="msg_complete_record">Recording complete.</string>
+    <string name="msg_saved">Saved.</string>
+
+    <string name="date">Date</string>
+    <string name="file_size">File Size</string>
+
+    <string name="msg_ask_file">Send to Little Mozart?</string>
+    <string name="yes">Yes</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="actions">Actions</string>
+
+    <string name="msg_success_rename">Rename successful.</string>
+    <string name="msg_failed_rename">Rename failed.</string>
+
+    <string name="msg_delete_file">Do you want to delete it?</string>
+    <string name="msg_success_delete">Delete successful.</string>
+    <string name="msg_failed_delete">Delete failed.</string>
+
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+    <string name="play">Play</string>
+</resources>

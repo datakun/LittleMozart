@@ -1,0 +1,12 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="text_size">80sp</dimen>
+    <dimen name="btn_text_size">48sp</dimen>
+    <dimen name="item_text_size">18sp</dimen>
+    <dimen name="tv_size">96dp</dimen>
+    <dimen name="btn_size">80dp</dimen>
+    <dimen name="more_btn_size">48dp</dimen>
+    <dimen name="text_margin">8dp</dimen>
+    <dimen name="btn_media_size">64dp</dimen>
+    <dimen name="seekbar_margin">32dp</dimen>
+</resources>
