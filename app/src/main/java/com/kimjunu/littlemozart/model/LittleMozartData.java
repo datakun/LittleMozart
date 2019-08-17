@@ -6,6 +6,13 @@ public class LittleMozartData {
     private int error;
     private String errorMessage;
 
+    public LittleMozartData() {
+        this.filename = "";
+        this.binaryData = "";
+        this.error = -1;
+        this.errorMessage = "";
+    }
+
     public LittleMozartData(String filename, String binaryData, int error, String errorMessage) {
         this.filename = filename;
         this.binaryData = binaryData;

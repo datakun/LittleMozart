@@ -1,15 +1,13 @@
-package com.kimjunu.littlemozart;
+package com.kimjunu.littlemozart.ui.main;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -20,6 +18,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.kimjunu.littlemozart.App;
+import com.kimjunu.littlemozart.R;
 import com.kimjunu.littlemozart.common.RestAPIClient;
 import com.kimjunu.littlemozart.common.RestAPIInterface;
 import com.kimjunu.littlemozart.common.Util;
@@ -40,40 +40,24 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileItemViewHolder> {
-    private final String TAG = "FileAdapter";
-
-    private ArrayList<File> fileList;
+public class RecordingFileAdapter extends FileAdapter<RecordingFileAdapter.FileItemViewHolder> {
+    private final String TAG = "RecordingFileAdapter";
 
     private MediaPlayer mediaPlayer = null;
     private Timer durationTextChanger = null;
 
     private RestAPIInterface apiInterface = null;
 
-    private Context mContext = null;
+    OnRestAPIResponseListener restAPIResponseListener = null;
 
-    private FileItemViewHolder currentViewHolder = null;
-    private ConstraintLayout selectedLayoutMedia = null;
+    public interface OnRestAPIResponseListener {
+        void onResponse(LittleMozartData data, boolean isSuccess);
 
-    private OnActionDoneListener actionDoneListener = null;
-    private OnItemClickListener itemClickListener = null;
-
-    interface OnActionDoneListener {
-        void onRenameDone();
-
-        void onDeleted();
+        void onFailure(String errorMessage);
     }
 
-    interface OnItemClickListener {
-        void onItemClicked(View view, int position, boolean isExpanded);
-    }
-
-    public void setOnActionDoneListener(OnActionDoneListener listener) {
-        actionDoneListener = listener;
-    }
-
-    public void setOnItemClickListener(OnItemClickListener listener) {
-        itemClickListener = listener;
+    public void setOnRestAPIResponseListener(OnRestAPIResponseListener listener) {
+        restAPIResponseListener = listener;
     }
 
     public class FileItemViewHolder extends RecyclerView.ViewHolder {
@@ -154,6 +138,8 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileItemViewHo
 
         @OnClick(R.id.layoutItem)
         public void onItemClicked(View view) {
+            currentViewHolder = this;
+
             stopMedia();
 
             initMediaView();
@@ -245,19 +231,27 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileItemViewHo
                                     if (responseBody.getError() != App.ERROR_NONE)
                                         throw new Exception("request failed: " + responseBody.getErrorMessage());
 
-                                    Util.decodeBase64ToFile(responseBody.getBinaryData(),
+                                    boolean isSuccess = Util.decodeBase64ToFile(responseBody.getBinaryData(),
                                             App.MediaPath + File.separator + responseBody.getFilename());
 
                                     Toast.makeText(mContext, responseBody.getFilename() + mContext.getString(R.string.msg_saved), Toast.LENGTH_LONG).show();
+
+                                    if (restAPIResponseListener != null)
+                                        restAPIResponseListener.onResponse(responseBody, isSuccess);
                                 } catch (Exception e) {
-                                    Log.e(TAG, e.getMessage());
                                     Toast.makeText(mContext, e.getMessage(), Toast.LENGTH_LONG).show();
+
+                                    LittleMozartData data = new LittleMozartData();
+                                    data.setErrorMessage(e.getMessage() + "");
+
+                                    if (restAPIResponseListener != null)
+                                        restAPIResponseListener.onResponse(data, false);
                                 }
                             }
 
                             @Override
                             public void onFailure(Call<LittleMozartData> call, Throwable t) {
-
+                                restAPIResponseListener.onFailure(t.getMessage());
                             }
                         });
 
@@ -278,131 +272,24 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileItemViewHo
 
             initMediaView();
 
-            AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
-            alertDialog.setTitle(R.string.actions);
-            alertDialog.setItems(R.array.menu, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    switch (which) {
-                        case 0:
-                            startRenameDialog();
-
-                            break;
-                        case 1:
-                            startDeleteDialog();
-
-                            break;
-                    }
-                }
-            });
-            alertDialog.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            });
-
-            alertDialog.show();
-        }
-
-        private void startRenameDialog() {
-            int position = getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION) {
-                if (mContext == null)
-                    return;
-
-                File file = fileList.get(position);
-
-                final String basename = file.getName().substring(0, file.getName().lastIndexOf("."));
-                AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-                builder.setTitle(basename);
-                View viewInflated = LayoutInflater.from(mContext).inflate(R.layout.layout_input_dialog, null);
-
-                final EditText editRename = viewInflated.findViewById(R.id.editRename);
-                editRename.setText(basename);
-                builder.setView(viewInflated);
-                builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        // 이름 변경
-                        File srcFile = new File(App.MediaPath, basename + ".mp4");
-                        File destFile = new File(App.MediaPath, editRename.getText().toString() + ".mp4");
-
-                        if (srcFile.renameTo(destFile)) {
-                            Toast.makeText(mContext, R.string.msg_success_rename, Toast.LENGTH_SHORT).show();
-
-                            if (actionDoneListener != null)
-                                actionDoneListener.onRenameDone();
-                        } else {
-                            Toast.makeText(mContext, R.string.msg_failed_rename, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-                builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                    }
-                });
-
-                builder.show();
-            }
-        }
-
-        private void startDeleteDialog() {
-            int position = getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION) {
-                if (mContext == null)
-                    return;
-
-                File file = fileList.get(position);
-                final String filepath = file.getAbsolutePath();
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-                builder.setTitle(file.getName());
-                builder.setMessage(R.string.msg_delete_file);
-                builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        // 파일 삭제
-                        File file = new File(filepath);
-
-                        if (file.delete()) {
-                            Toast.makeText(mContext, R.string.msg_success_delete, Toast.LENGTH_SHORT).show();
-
-                            if (actionDoneListener != null)
-                                actionDoneListener.onDeleted();
-                        } else {
-                            Toast.makeText(mContext, R.string.msg_failed_delete, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-                builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                    }
-                });
-
-                builder.show();
-            }
-        }
-
-        private void initMediaView() {
-            sbDuration.setProgress(0);
-            tvStartTime.setText("00:00");
-            ivPlayStop.setTag(R.drawable.ic_play_arrow_black_24dp);
-            ivPlayStop.setImageResource(R.drawable.ic_play_arrow_black_24dp);
+            startActionDialog();
         }
     }
 
-    public FileAdapter(ArrayList<File> fileList) {
+    public RecordingFileAdapter() {
+        this.fileExtension = ".mp4";
+        this.fileList = new ArrayList<>();
+    }
+
+    public RecordingFileAdapter(ArrayList<File> fileList) {
+        this.fileExtension = ".mp4";
         this.fileList = fileList;
     }
 
-    public void setFileList(ArrayList<File> fileList) {
-        this.fileList = fileList;
-    }
-
-    public void playMedia(FileItemViewHolder viewHolder, String filepath) {
+    @Override
+    public void playMedia(RecyclerView.ViewHolder viewHolder, String filepath) {
         if (mediaPlayer != null && mediaPlayer.isPlaying())
             mediaPlayer.stop();
-
-        currentViewHolder = viewHolder;
 
         if (!"".equals(filepath)) {
             try {
@@ -417,9 +304,12 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileItemViewHo
 
                 mediaPlayer.prepare();
 
-                // 시작 전에 SeekBar를 움직였다면 해당 위치부터 시작
-                if (currentViewHolder.sbDuration.getProgress() != 0)
-                    mediaPlayer.seekTo(currentViewHolder.sbDuration.getProgress());
+                FileItemViewHolder itemViewHolder = (FileItemViewHolder) currentViewHolder;
+                if (itemViewHolder != null) {
+                    // 시작 전에 SeekBar를 움직였다면 해당 위치부터 시작
+                    if (itemViewHolder.sbDuration.getProgress() != 0)
+                        mediaPlayer.seekTo(itemViewHolder.sbDuration.getProgress());
+                }
 
                 mediaPlayer.start();
             } catch (Exception e) {
@@ -436,20 +326,23 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileItemViewHo
                     @Override
                     public void run() {
                         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                            long currentTime = mediaPlayer.getCurrentPosition();
-                            currentViewHolder.sbDuration.setProgress((int) currentTime);
+                            FileItemViewHolder itemViewHolder = (FileItemViewHolder) currentViewHolder;
+                            if (itemViewHolder != null) {
+                                long currentTime = mediaPlayer.getCurrentPosition();
+                                itemViewHolder.sbDuration.setProgress((int) currentTime);
 
-                            String duration = "00:00";
-                            if (currentTime != 0) {
-                                long min = currentTime / (60 * 1000);
-                                long sec = (currentTime % (60 * 1000)) / 1000;
+                                String duration = "00:00";
+                                if (currentTime != 0) {
+                                    long min = currentTime / (60 * 1000);
+                                    long sec = (currentTime % (60 * 1000)) / 1000;
 
-                                String minutes = String.format(Locale.ENGLISH, "%02d", min);
-                                String seconds = String.format(Locale.ENGLISH, "%02d", sec);
+                                    String minutes = String.format(Locale.ENGLISH, "%02d", min);
+                                    String seconds = String.format(Locale.ENGLISH, "%02d", sec);
 
-                                duration = minutes + ":" + seconds;
+                                    duration = minutes + ":" + seconds;
+                                }
+                                itemViewHolder.tvStartTime.setText(duration);
                             }
-                            currentViewHolder.tvStartTime.setText(duration);
                         }
                     }
                 });
@@ -458,6 +351,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileItemViewHo
         durationTextChanger.schedule(timerTask, 0, 500);
     }
 
+    @Override
     public void stopMedia() {
         if (mediaPlayer != null) {
             mediaPlayer.stop();
@@ -465,13 +359,13 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileItemViewHo
             mediaPlayer = null;
         }
 
-        if (currentViewHolder != null)
-            currentViewHolder.initMediaView();
+        initMediaView();
 
         if (durationTextChanger != null)
             durationTextChanger.cancel();
     }
 
+    @Override
     public void pauseMedia() {
         if (mediaPlayer != null)
             mediaPlayer.pause();
@@ -481,15 +375,35 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileItemViewHo
     }
 
     @Override
-    public FileAdapter.FileItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    void initMediaView() {
+        FileItemViewHolder itemViewHolder = (FileItemViewHolder) currentViewHolder;
+        if (itemViewHolder == null)
+            return;
+
+        itemViewHolder.sbDuration.setProgress(0);
+        itemViewHolder.tvStartTime.setText("00:00");
+        itemViewHolder.ivPlayStop.setTag(R.drawable.ic_play_arrow_black_24dp);
+        itemViewHolder.ivPlayStop.setImageResource(R.drawable.ic_play_arrow_black_24dp);
+    }
+
+    @Override
+    void collapseMediaView() {
+        initMediaView();
+
+        if (selectedLayoutMedia != null)
+            selectedLayoutMedia.setVisibility(View.GONE);
+    }
+
+    @NonNull
+    @Override
+    public FileItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         mContext = parent.getContext();
 
         apiInterface = RestAPIClient.getClient(mContext, App.SERVER_ADDRESS).create(RestAPIInterface.class);
 
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_file_item, parent, false);
-        FileItemViewHolder viewHolder = new FileItemViewHolder(mContext, view);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_record_item, parent, false);
 
-        return viewHolder;
+        return new FileItemViewHolder(mContext, view);
     }
 
     @Override
@@ -526,10 +440,5 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileItemViewHo
         holder.sbDuration.setMax((int) durationTime);
 
         holder.ivPlayStop.setTag(R.drawable.ic_play_arrow_black_24dp);
-    }
-
-    @Override
-    public int getItemCount() {
-        return fileList.size();
     }
 }

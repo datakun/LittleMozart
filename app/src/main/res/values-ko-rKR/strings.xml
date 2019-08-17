@@ -20,4 +20,8 @@
     <string name="stop">정지</string>
     <string name="title_activity_recording">녹음</string>
     <string name="yes">예</string>
+    <string name="text_midi_files">MIDI 파일</string>
+    <string name="text_recording_files">녹음 파일</string>
+    <string name="msg_ask_share">공유 하시겠습니까?</string>
+    <string name="share">공유</string>
 </resources>

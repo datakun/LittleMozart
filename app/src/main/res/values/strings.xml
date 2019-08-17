@@ -27,4 +27,10 @@
     <string name="rename">Rename</string>
     <string name="delete">Delete</string>
     <string name="play">Play</string>
+    <string name="share">Share</string>
+
+    <string name="text_recording_files">Recording Files</string>
+    <string name="text_midi_files">MIDI Files</string>
+
+    <string name="msg_ask_share">Share?</string>
 </resources>

@@ -8,5 +8,7 @@
     <dimen name="more_btn_size">48dp</dimen>
     <dimen name="text_margin">8dp</dimen>
     <dimen name="btn_media_size">64dp</dimen>
-    <dimen name="seekbar_margin">32dp</dimen>
+    <dimen name="seek_bar_margin">32dp</dimen>
+    <dimen name="appbar_padding">16dp</dimen>
+    <dimen name="appbar_padding_top">8dp</dimen>
 </resources>
