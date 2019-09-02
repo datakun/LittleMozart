@@ -10,7 +10,7 @@ public class App {
     public static final long RECORD_LIMIT_MILISECOND = 60 * 60 * 1000;
 
     // 서버 주소
-    public static final String SERVER_ADDRESS = "http://52.231.190.181:5000";
+    public static final String SERVER_ADDRESS = "http://127.0.0.1:5000";
 
     // Rest API URL
     public static final String URL_LITTLE_MOZART = "call-little-mozart";

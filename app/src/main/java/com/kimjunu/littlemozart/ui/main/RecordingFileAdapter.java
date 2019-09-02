@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +30,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -251,7 +253,10 @@ public class RecordingFileAdapter extends FileAdapter<RecordingFileAdapter.FileI
 
                             @Override
                             public void onFailure(Call<LittleMozartData> call, Throwable t) {
-                                restAPIResponseListener.onFailure(t.getMessage());
+                                Log.e(TAG, Objects.requireNonNull(t.getMessage()));
+
+                                if (restAPIResponseListener != null)
+                                    restAPIResponseListener.onFailure(t.getMessage());
                             }
                         });
 
